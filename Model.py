@@ -124,17 +124,8 @@ class Model(nn.Module):
 	'''
 	def forward_MM(self, adj, image_adj, text_adj):
 		# 1) 模态特征映射到统一维度（latdim）
-		#    - args.trans=0/2：使用参数矩阵 + LeakyReLU
-		#    - args.trans=1  ：使用 nn.Linear
-		if args.trans == 0:
-			image_feats = self.leakyrelu(torch.mm(self.image_embedding, self.image_trans))
-			text_feats = self.leakyrelu(torch.mm(self.text_embedding, self.text_trans))
-		elif args.trans == 1:
-			image_feats = self.image_trans(self.image_embedding)
-			text_feats = self.text_trans(self.text_embedding)
-		else:
-			image_feats = self.leakyrelu(torch.mm(self.image_embedding, self.image_trans))
-			text_feats = self.text_trans(self.text_embedding)
+		image_feats = self.getImageFeats() 
+		text_feats = self.getTextFeats()
 
 		# 2) 计算模态融合权重（两模态：图像/文本），softmax 归一化后 weight.sum()=1
 		weight = self.softmax(self.modal_weight) # [2]，weight[0] 对应图像，weight[1] 对应文本
