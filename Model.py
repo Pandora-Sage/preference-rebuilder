@@ -28,11 +28,6 @@ class Model(nn.Module):
 		# 边采样器，用于在训练时对邻接矩阵随机丢弃部分边（DropEdge），增强模型泛化能力。
 		self.edgeDropper = SpAdjDropEdge(args.keepRate)
 
-
-		#修改地方↓▼ 添加
-		
-		#修改地方▲↑
-
 	
 		'''
 		将原始模态特征（图像 / 文本 ）映射到相同的潜在维度 latdim。
@@ -111,24 +106,19 @@ class Model(nn.Module):
 			# 如果 args.trans=1 或 2，则直接用 nn.Linear 做映射。
 			return self.text_trans(self.text_embedding)
 
-	
 	'''
 	正向传播 forward_MM
-	主要步骤：
-		1、模态特征变换（图像、文本、音频）；
-		2、拼接用户嵌入+模态特征 → 经过模态图进行传播（spmm）；
-		3、额外加入融合边图（embedsImageAdj, embedsTextAdj）增强传播效果；
-		4、模态融合：根据权重融合图像、文本、音频信息；
-		5、多层GCN图卷积更新嵌入；
-		6、返回最终的用户和物品嵌入。
 	'''
 	def forward_MM(self, adj, image_adj, text_adj):
 		# 1) 模态特征映射到统一维度（latdim）
-		image_feats = self.getImageFeats() 
-		text_feats = self.getTextFeats()
+		#    - args.trans=0/2：使用参数矩阵 + LeakyReLU
+		#    - args.trans=1  ：使用 nn.Linear
+		image_feats = self.getImageFeats() # [item, D]
+		text_feats = self.getTextFeats()   # [item, D]
 
-		# 2) 计算模态融合权重（两模态：图像/文本），softmax 归一化后 weight.sum()=1
+		# 2) 计算模态融合权重（两模态：图像/文本）
 		weight = self.softmax(self.modal_weight) # [2]，weight[0] 对应图像，weight[1] 对应文本
+
 
 		# 3) 基于 image_adj 做一次“图像模态通道”的图传播
     	#    先把当前节点表示拼起来：顺序是 [用户U; 物品I]，维度 [N, D]
@@ -244,11 +234,24 @@ GCN 图卷积层 GCNLayer “极简版的 GCN 图卷积层”
 	简洁但高效，用于图结构信息传播。
 '''
 class GCNLayer(nn.Module):
-	def __init__(self):
-		super(GCNLayer, self).__init__()
+    def __init__(self):
+        super(GCNLayer, self).__init__()
+        self.act = nn.LeakyReLU(0.2)
+        # 增加图注意力权重参数
+        self.att_weight = nn.Parameter(init(torch.empty(args.latdim, 1)))
+        self.dropout = nn.Dropout(p=0.1)
 
-	def forward(self, adj, embeds):
-		return torch.spmm(adj, embeds) # 做稀疏矩阵和稠密矩阵的乘法
+    def forward(self, adj, embeds):
+        # 标准GCN传播
+        embeds = torch.spmm(adj, embeds)
+        # 计算注意力权重
+        att_scores = torch.matmul(embeds, self.att_weight).squeeze()
+        att_scores = F.softmax(att_scores, dim=0).unsqueeze(1)
+        # 应用注意力权重
+        embeds = embeds * att_scores
+        # 非线性变换和dropout
+        embeds = self.act(embeds)
+        return self.dropout(embeds)
 
 '''
 边丢弃模块 SpAdjDropEdge
