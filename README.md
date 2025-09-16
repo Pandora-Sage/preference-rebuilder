@@ -133,7 +133,7 @@ python Main.py --dataset yourdata --latdim 128 --steps 5 --rebuild_k 5
   title={Preference Rebuilder: A Noise-aware Preference Reconstruction Framework for Recommendation},
   author={Your Name},
   year={2025},
-  howpublished={\url{https://github.com/yourname/preference-rebuilder}}
+  howpublished={\url{https://github.com/Pandora-Sage/preference-rebuilder}}
 }
 ```
 
