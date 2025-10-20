@@ -7,7 +7,7 @@ from DataHandler import DataHandler
 import numpy as np
 from Utils.Utils import *
 import os
-import scipy.sparse as sp 		    # scipy.sparse: 用于稀疏矩阵的处理，节省内存。
+import scipy.sparse as sp 		    
 import random 						# random, os: 用于设置随机种子和操作系统环境。
 import setproctitle
 from scipy.sparse import coo_matrix
