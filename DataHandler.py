@@ -11,26 +11,12 @@ from tqdm import tqdm
 import random
 
 '''
-1、初始化文件路径
-2、加载数据：通过 loadOneFile 方法加载训练集和测试集的稀疏矩阵，并使用 PyTorch 的 Dataset 对象封装数据。
-3、特征加载：加载图像、文本特征，并提供相应的 PyTorch 张量表示。
-4、数据预处理：对训练数据矩阵进行归一化，并将其转换为适用于 PyTorch 的稀疏张量。
-5、负采样：在训练数据集中进行负样本采样，用于训练推荐模型。
-6、扩散数据处理：处理扩散过程的数据，以便于后续的图模型计算。
-
-可能的改进/优化：
-1、负采样优化：negSampling 方法在循环中每次都会进行随机选择，这可能是性能瓶颈。可以考虑采用更高效的负采样算法。
-2、数据预处理优化：如果数据集非常大，可能需要对数据加载进行并行化处理，减少 I/O 阻塞。
-3、内存管理：加载大规模数据集时，可以通过批量加载数据和利用稀疏矩阵减少内存开销。
-
 这段代码为数据加载、预处理和特征提取提供了一个较为完整的框架，适用于基于 PyTorch 的推荐系统模型。
 '''
 class DataHandler:
 	def __init__(self):
 		if args.data == 'Beauty':
 			predir = './Datasets/Beauty/'
-		elif args.data == 'Food':
-			predir = './Datasets/Food/'
 		elif args.data == 'clothing':
 			predir = './Datasets/clothing/'
 		elif args.data == 'baby':
